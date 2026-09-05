@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Волонтёрское движение "Добрые сердца"</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo">
+            <svg width="60" height="60" viewBox="0 0 100 100" fill="none">
+                <path d="M65,45 L63,38 C61,33 57,31 53,33 C49,35 46,41 46,47 L44,55 C42,59 38,61 35,59 C32,57 30,51 32,45 L34,37 C36,31 34,25 28,25 C22,25 20,31 22,37 L24,49 C24,55 22,61 26,66 C30,72 37,76 45,76 L60,76 C67,76 73,71 75,63 L77,53 C79,46 75,40 70,40 L65,45Z" fill="#FFB08C" stroke="#B95A2E" stroke-width="1.5"/>
+                <g class="heart-animated">
+                    <path d="M50,52 C50,52 46,44 42,41 C38,38 34,39 33,43 C32,47 35,51 50,62 C65,51 68,47 67,43 C66,39 62,38 58,41 C54,44 50,52 50,52Z" fill="#e74c3c" stroke="#c0392b" stroke-width="1"/>
+                    <path d="M50,54 C50,54 47,47 44,44 C41,41 38,42 37,45 C36,48 39,52 50,60 C61,52 64,48 63,45 C62,42 59,41 56,44 C53,47 50,54 50,54Z" fill="#ff6b6b"/>
+                </g>
+            </svg>
+            <div>
+                <h1>❤️ Добрые сердца</h1>
+                <p>волонтёрское движение</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="filter-item">
+            <label>📅 ДАТА</label>
+            <input type="date" id="filterDate">
+        </div>
+        <div class="filter-item">
+            <label>🏷️ ТИП</label>
+            <select id="filterType">
+                <option value="all">Все</option>
+                <option value="Эко">🌿 Эко</option>
+                <option value="Дети">🧸 Дети</option>
+                <option value="Донорство">🩸 Донорство</option>
+                <option value="Образование">📚 Образование</option>
+                <option value="Животные">🐾 Животные</option>
+            </select>
+        </div>
+        <button id="resetBtn">Сбросить</button>
+    </div>
+
+    <div id="calendar" class="events"></div>
+
+    <footer>
+        ⚡ Нажми «Лайк» или «Поддержать» — покажи, что ты с нами!
+    </footer>
+</div>
+
+<script>
+    const events = [
+        { id: 1, title: "Чистый парк", date: "2026-06-10", type: "Эко", desc: "Убираем парк и сажаем цветы" },
+        { id: 2, title: "Помощь детям", date: "2026-06-15", type: "Дети", desc: "Мастерим поделки с ребятами" },
+        { id: 3, title: "День донора", date: "2026-06-20", type: "Донорство", desc: "Сдаём кровь — спасаем жизни" },
+        { id: 4, title: "Уроки для бабушек", date: "2026-06-25", type: "Образование", desc: "Учим пользоваться телефоном" },
+        { id: 5, title: "Помощь приюту", date: "2026-07-01", type: "Животные", desc: "Кормим и выгуливаем собак" },
+        { id: 6, title: "Эко-субботник", date: "2026-07-05", type: "Эко", desc: "Убираем берег реки" },
+        { id: 7, title: "Книжный сбор", date: "2026-06-18", type: "Дети", desc: "Собираем книги для малышей" },
+        { id: 8, title: "Помощь пожилым", date: "2026-07-10", type: "Образование", desc: "Помогаем бабушкам с покупками" }
+    ];
+
+    let likes = {};
+    let supports = {};
+
+    function loadData() {
+        let savedLikes = localStorage.getItem("likes");
+        let savedSupports = localStorage.getItem("supports");
+        
+        if (savedLikes) {
+            likes = JSON.parse(savedLikes);
+        } else {
+            events.forEach(e => { likes[e.id] = Math.floor(Math.random() * 10); });
+        }
+        
+        if (savedSupports) {
+            supports = JSON.parse(savedSupports);
+        } else {
+            events.forEach(e => { supports[e.id] = Math.floor(Math.random() * 6); });
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem("likes", JSON.stringify(likes));
+        localStorage.setItem("supports", JSON.stringify(supports));
+    }
+
+    let currentDate = "";
+    let currentType = "all";
+
+    function getFilteredEvents() {
+        let result = [...events];
+
+        if (currentDate) {
+            result = result.filter(e => e.date === currentDate);
+        }
+        
+        if (currentType !== "all") {
+            result = result.filter(e => e.type === currentType);
+        }
+        
+        return result;
+    }
+
+    function renderCalendar() {
+        let filtered = getFilteredEvents();
+        let container = document.getElementById("calendar");
+        
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="no-events">😕 Нет мероприятий по выбранным фильтрам</div>';
+            return;
+        }
+        
+        container.innerHTML = "";
+        
+        filtered.forEach(event => {
+            let likeCount = likes[event.id] || 0;
+            let supportCount = supports[event.id] || 0;
+            
+            let dateObj = new Date(event.date);
+            let niceDate = dateObj.toLocaleDateString("ru-RU", { day: 'numeric', month: 'long' });
+            
+            let card = document.createElement("div");
+            card.className = "event-card";
+            card.innerHTML = `
+                <div class="event-type">${event.type}</div>
+                <div class="event-title">${event.title}</div>
+                <div class="event-date">📅 ${niceDate}</div>
+                <div class="event-desc">${event.desc}</div>
+                <div class="actions">
+                    <button class="like-btn" data-id="${event.id}">
+                        ❤️ Лайк <span id="like-${event.id}">${likeCount}</span>
+                    </button>
+                    <button class="support-btn" data-id="${event.id}">
+                        🤝 Поддержать <span id="support-${event.id}">${supportCount}</span>
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        
+        document.querySelectorAll('.like-btn').forEach(btn => {
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                let id = parseInt(this.getAttribute('data-id'));
+                likes[id] = (likes[id] || 0) + 1;
+                let span = document.getElementById(`like-${id}`);
+                if (span) span.innerText = likes[id];
+                saveData();
+                this.style.transform = "scale(0.95)";
+                setTimeout(() => { this.style.transform = ""; }, 100);
+            };
+        });
+        
+        document.querySelectorAll('.support-btn').forEach(btn => {
+            btn.onclick = function(e) {
+                e.stopPropagation();
+                let id = parseInt(this.getAttribute('data-id'));
+                supports[id] = (supports[id] || 0) + 1;
+                let span = document.getElementById(`support-${id}`);
+                if (span) span.innerText = supports[id];
+                saveData();
+                this.style.transform = "scale(0.95)";
+                setTimeout(() => { this.style.transform = ""; }, 100);
+            };
+        });
+    }
+
+    function setupFilters() {
+        let dateInput = document.getElementById("filterDate");
+        let typeSelect = document.getElementById("filterType");
+        let resetBtn = document.getElementById("resetBtn");
+        
+        dateInput.onchange = function() {
+            currentDate = this.value;
+            renderCalendar();
+        };
+        
+        typeSelect.onchange = function() {
+            currentType = this.value;
+            renderCalendar();
+        };
+        
+        resetBtn.onclick = function() {
+            currentDate = "";
+            currentType = "all";
+            dateInput.value = "";
+            typeSelect.value = "all";
+            renderCalendar();
+        };
+    }
+
+    loadData();
+    setupFilters();
+    renderCalendar();
+    saveData();
+</script>
+</body>
+</html>
